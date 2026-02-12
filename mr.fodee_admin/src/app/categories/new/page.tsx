@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { categoryApi, uploadApi } from "@/lib/api";
 import { ChevronLeft, Save, Upload, Loader } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AddCategoryPage() {
   const router = useRouter();
@@ -18,17 +19,18 @@ export default function AddCategoryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.image) {
-      alert("Please upload a category image");
+      toast.error("Please upload a category image");
       return;
     }
 
     setLoading(true);
     try {
       await categoryApi.create(formData);
+      toast.success("Category created successfully!");
       router.push("/categories");
     } catch (error) {
       console.error("Failed to create category:", error);
-      alert("Failed to create category. Please try again.");
+      toast.error("Failed to create category");
     } finally {
       setLoading(false);
     }
@@ -44,12 +46,14 @@ export default function AddCategoryPage() {
     if (!file) return;
 
     setUploading(true);
+    const toastId = toast.loading("Uploading image...");
     try {
       const response = await uploadApi.uploadFile(file);
       setFormData(prev => ({ ...prev, image: response.data.url }));
+      toast.success("Image uploaded", { id: toastId });
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Image upload failed");
+      toast.error("Upload failed", { id: toastId });
     } finally {
       setUploading(false);
     }

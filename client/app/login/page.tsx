@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import {
   Mail,
   Lock,
@@ -34,9 +35,12 @@ export default function LoginPage() {
       const response = await userApi.login({ email, password });
       // Store user data in context and localStorage
       login(response.data);
+      toast.success("Welcome back, " + response.data.username + "!");
       router.push("/");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Invalid email or password");
+      const msg = err.response?.data?.error || "Invalid email or password";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

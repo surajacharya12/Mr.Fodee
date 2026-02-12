@@ -14,6 +14,7 @@ import {
   Pizza,
   Grid2X2
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -63,6 +64,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminUser");
+    toast.success("Logged out successfully");
     router.push("/login");
   };
 

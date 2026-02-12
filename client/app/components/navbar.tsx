@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import {
   MapPin,
   Search,
@@ -37,6 +38,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
+    toast.success("Signed out successfully");
   };
 
   return (
@@ -170,7 +172,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="hidden md:flex ml-2 px-6 py-2 bg-[primary] text-white rounded-full font-bold text-sm hover:bg-[#E64500] transition-all shadow-lg shadow-orange-100 items-center gap-2"
+                  className="hidden md:flex ml-2 px-6 py-2 bg-gradient-premium text-white rounded-full font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-orange-200 items-center gap-2"
                 >
                   <User className="w-4 h-4" />
                   Sign In

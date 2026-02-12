@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { foodApi } from "@/lib/api";
 import { Search, Plus, Utensils, Star, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function FoodItemsPage() {
   const [foods, setFoods] = useState<any[]>([]);
@@ -30,9 +31,10 @@ export default function FoodItemsPage() {
     try {
       await foodApi.delete(id);
       setFoods(foods.filter(f => f._id !== id));
+      toast.success("Food item deleted");
     } catch (error) {
       console.error("Failed to delete food item:", error);
-      alert("Failed to delete food item");
+      toast.error("Failed to delete food item");
     }
   };
 

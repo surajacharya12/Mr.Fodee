@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { foodApi, restaurantApi, uploadApi, categoryApi } from "@/lib/api";
 import { ChevronLeft, Save, Upload, Loader, Utensils } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AddFoodPage() {
   const router = useRouter();
@@ -47,11 +48,15 @@ export default function AddFoodPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.restaurant) {
-      alert("Please select a restaurant");
+      toast.error("Please select a restaurant");
       return;
     }
     if (!formData.category) {
-      alert("Please select a category");
+      toast.error("Please select a category");
+      return;
+    }
+    if (!formData.image) {
+      toast.error("Please upload an image");
       return;
     }
     setLoading(true);
@@ -60,10 +65,11 @@ export default function AddFoodPage() {
         ...formData,
         price: Number(formData.price)
       });
+      toast.success("Food item created successfully!");
       router.push("/food");
     } catch (error) {
       console.error("Failed to create food item:", error);
-      alert("Failed to create food item");
+      toast.error("Failed to create food item");
     } finally {
       setLoading(false);
     }
@@ -79,12 +85,14 @@ export default function AddFoodPage() {
     if (!file) return;
 
     setUploading(true);
+    const toastId = toast.loading("Uploading image...");
     try {
       const response = await uploadApi.uploadFile(file);
       setFormData(prev => ({ ...prev, image: response.data.url }));
+      toast.success("Image uploaded", { id: toastId });
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Image upload failed");
+      toast.error("Upload failed", { id: toastId });
     } finally {
       setUploading(false);
     }

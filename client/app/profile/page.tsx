@@ -21,10 +21,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [promotions, setPromotions] = useState(true);
   const [userData, setUserData] = useState({
@@ -49,6 +52,12 @@ export default function ProfilePage() {
       }
     }
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Signed out successfully");
+    router.push("/");
+  };
 
   // Handle image upload
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,7 +198,7 @@ export default function ProfilePage() {
             </div>
 
             <button 
-              onClick={() => router.push("/")}
+              onClick={handleLogout}
               className="w-full flex items-center justify-center gap-3 py-6 text-[#EE4444] font-black border-2 border-red-50 rounded-4xl hover:bg-red-50 hover:border-red-100 transition-all active:scale-[0.98]"
             >
               <LogOut className="w-6 h-6" />

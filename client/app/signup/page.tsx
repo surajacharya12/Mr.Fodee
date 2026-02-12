@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import {
   Mail,
   Lock,
@@ -70,11 +71,12 @@ export default function SignupPage() {
 
       // Automatically log in the user after signup
       login(response.data);
+      toast.success("Account created! Welcome, " + response.data.username);
       router.push("/");
     } catch (err: any) {
-      setError(
-        err.response?.data?.error || "Something went wrong. Please try again.",
-      );
+      const msg = err.response?.data?.error || "Something went wrong. Please try again.";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
