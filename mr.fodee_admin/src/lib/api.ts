@@ -25,8 +25,8 @@ export const userApi = {
 };
 
 export const adminApi = {
+  login: (credentials: { email: string; password: string }) => api.post('/admin/login', credentials),
   getStats: () => api.get('/admin/dashboard/stats'),
-  login: (credentials: any) => api.post('/admin/login', credentials),
 };
 
 export const restaurantApi = {

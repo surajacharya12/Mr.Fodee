@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { userApi } from "@/lib/api";
-import { Search, MoreHorizontal, Trash2, Edit, Shield } from "lucide-react";
+import { Search, MoreHorizontal, Trash2, Shield } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -35,9 +36,10 @@ export default function UsersPage() {
     try {
       await userApi.delete(userId);
       setUsers(users.filter(u => u._id !== userId));
+      toast.success("User deleted successfully");
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert("Failed to delete user");
+      toast.error("Failed to delete user");
     }
   };
 
@@ -114,11 +116,6 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-2">
-                         <Link href={`/users/edit/${user._id}`}>
-                            <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
-                               <Edit className="w-4 h-4" />
-                            </button>
-                         </Link>
                          <button 
                            onClick={() => handleDelete(user._id)}
                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

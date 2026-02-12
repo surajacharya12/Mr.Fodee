@@ -59,6 +59,16 @@ export default function ProfilePage() {
     router.push("/");
   };
 
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!userData?.username) return "U";
+    const names = userData.username.split(" ");
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return userData.username.substring(0, 2).toUpperCase();
+  };
+
   // Handle image upload
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,11 +103,17 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row items-center md:items-end gap-6">
               <div className="relative group">
                 <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white overflow-hidden shadow-2xl">
-                  <img 
-                    src={imagePreview || userData.profilePictureUrl} 
-                    alt={userData.username} 
-                    className="w-full h-full object-cover"
-                  />
+                  {(imagePreview || userData.profilePictureUrl) ? (
+                    <img 
+                      src={imagePreview || userData.profilePictureUrl} 
+                      alt={userData.username} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-premium flex items-center justify-center">
+                      <span className="text-white font-black text-4xl">{getUserInitials()}</span>
+                    </div>
+                  )}
                 </div>
                 <label htmlFor="profile-image-upload" className="absolute bottom-1 right-1 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg text-[#EE4444] hover:scale-110 transition-transform cursor-pointer">
                   <Edit2 className="w-4 h-4" />

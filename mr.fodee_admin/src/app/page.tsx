@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { adminApi } from "@/lib/api";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { 
   Users, 
   Store, 
@@ -26,9 +27,14 @@ export default function AdminDashboard() {
       setStats(data);
     } catch (error: any) {
       console.error("Failed to fetch admin stats:", error);
-      if (error.response) {
+      
+      if (error.code === 'ERR_NETWORK') {
+        toast.error("Cannot connect to server. Please make sure the backend is running on port 3001.");
+      } else if (error.response) {
         console.error("Server Error Data:", error.response.data);
-        alert(`Failed to load stats: ${JSON.stringify(error.response.data)}`);
+        toast.error(`Server error: ${error.response.data.error || 'Unknown error'}`);
+      } else {
+        toast.error("Failed to load dashboard stats");
       }
     } finally {
       setLoading(false);
