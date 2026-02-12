@@ -198,16 +198,26 @@ function MenuContent() {
                 </p>
 
                 <div className="mt-auto flex items-center justify-between">
-                  <div>
-                    <span className="text-sm text-gray-400 font-medium block mb-0.5">Price</span>
-                    <span className="text-3xl font-black text-[#2D2D2D]">
-                      Rs. {item.price}
-                    </span>
-                  </div>
+                  <div className="flex items-end justify-between w-full">
+                    <div>
+                      <span className="text-sm text-gray-400 font-medium block mb-0.5">Price</span>
+                      <span className="text-3xl font-black text-[#2D2D2D]">
+                        Rs. {item.price}
+                      </span>
+                    </div>
 
-                  <button className="w-14 h-14 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-105 active:scale-95 transition-all">
-                    <Plus className="w-6 h-6 stroke-[3px]" />
-                  </button>
+                    <div className="flex items-center gap-4">
+                      {item.rating > 0 && (
+                        <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-50 text-orange-500 text-xs font-bold mb-1">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          {item.rating}
+                        </div>
+                      )}
+                      <button className="w-14 h-14 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-105 active:scale-95 transition-all">
+                        <Plus className="w-6 h-6 stroke-[3px]" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

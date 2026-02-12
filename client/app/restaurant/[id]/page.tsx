@@ -86,6 +86,38 @@ export default function RestaurantDetailPage() {
     }
   };
 
+  const submitReview = async () => {
+    if (!user) {
+      alert("Please login to rate");
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      const { data } = await reviewApi.create({
+        user: user.id,
+        restaurant: id,
+        rating: newReview.rating,
+        comment: newReview.comment
+      });
+      
+      setReviews(prev => [data, ...prev]);
+      setShowReviewModal(false);
+      setNewReview({ rating: 5, comment: "" });
+      
+      // Update restaurant rating in local state if returned
+      const updatedRest = await restaurantApi.getById(id);
+      setRestaurant(updatedRest.data);
+      
+      alert("Review submitted successfully!");
+    } catch (err: any) {
+      console.error("Failed to submit review", err);
+      alert(err.response?.data?.error || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const filteredFoods = useMemo(() => {
     let result = foods;
     if (activeTab === "Recommended") {
@@ -210,6 +242,13 @@ export default function RestaurantDetailPage() {
                     <Star className="w-4 h-4 fill-current" />
                     {restaurant.rating}
                   </div>
+                  <button 
+                    onClick={() => setShowReviewModal(true)}
+                    className="flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 text-[#2D2D2D] text-xs font-black hover:bg-gray-200 transition-colors"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Rate Now
+                  </button>
                 </div>
                 <p className="text-gray-500 font-medium mb-6">{restaurant.foodCategory} • {restaurant.cuisines || 'Multi Cuisine'}</p>
                 
@@ -326,6 +365,12 @@ export default function RestaurantDetailPage() {
                       
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-black text-[#2D2D2D]">Rs. {item.price}</span>
+                        {item.rating > 0 && (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-black">
+                             <Star className="w-3.5 h-3.5 fill-current" />
+                             {item.rating}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -342,6 +387,102 @@ export default function RestaurantDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowReviewModal(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <button 
+              onClick={() => setShowReviewModal(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-400" />
+            </button>
+
+            <h3 className="text-2xl font-black text-[#2D2D2D] mb-2 text-center">Rate Your Experience</h3>
+            <p className="text-gray-500 text-center mb-8 font-medium">How was food and service at {restaurant.name}?</p>
+
+            <div className="flex justify-center gap-3 mb-8">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setNewReview({ ...newReview, rating: star })}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                    newReview.rating >= star ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 grow' : 'bg-gray-50 text-gray-300'
+                  }`}
+                >
+                  <Star className={`w-6 h-6 ${newReview.rating >= star ? 'fill-current' : ''}`} />
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              placeholder="Tell us more about your experience (optional)"
+              value={newReview.comment}
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              className="w-full h-32 p-4 rounded-3xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#EE4444] outline-none transition-all mb-6 resize-none font-medium text-[#2D2D2D]"
+            ></textarea>
+
+            <button
+              onClick={submitReview}
+              disabled={submittingReview}
+              className="w-full h-16 rounded-2xl bg-[#EE4444] text-white font-black text-lg shadow-xl shadow-[#EE4444]/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {submittingReview ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Submit Review
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Section */}
+      <section className="max-w-screen-2xl mx-auto px-4 md:px-4 mb-20">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h2 className="text-3xl font-black text-[#2D2D2D] mb-1">Customer Reviews</h2>
+            <p className="text-gray-500 font-medium">{reviews.length} people shared their experience</p>
+          </div>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="bg-white rounded-[2.5rem] py-16 flex flex-col items-center text-center border border-gray-100">
+             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-4">
+                <MessageSquare className="w-8 h-8" />
+             </div>
+             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No reviews yet. Be the first!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reviews.map((rev) => (
+              <div key={rev._id} className="bg-white rounded-[2rem] p-6 border border-gray-50 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#EE4444] font-bold uppercase">
+                      {rev.user?.username?.[0] || 'U'}
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#2D2D2D]">{rev.user?.username || 'User'}</p>
+                      <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">{new Date(rev.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 text-orange-500 text-xs font-black">
+                     <Star className="w-3 h-3 fill-current" />
+                     {rev.rating}
+                  </div>
+                </div>
+                <p className="text-gray-500 text-sm leading-relaxed italic">"{rev.comment || 'No comment provided.'}"</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <Footer />
     </div>
