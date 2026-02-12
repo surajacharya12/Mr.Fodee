@@ -27,7 +27,8 @@ const corsOptions = {
     'http://localhost:3005',
     'https://mr-fodee.vercel.app',
     'https://mr-fodee-admin.vercel.app',
-    /\.vercel\.app$/
+    /\.vercel\.app$/,
+    
   ],
   credentials: true,
   optionsSuccessStatus: 200
