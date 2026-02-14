@@ -41,11 +41,21 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           );
           const data = await response.json();
 
-          // Use display_name for a more precise address, or fallback to components
-          const preciseAddress = data.display_name || 
-            (data.address.suburb || data.address.neighbourhood || data.address.road || data.address.city || "Unknown Location");
-          
-          setAddress(preciseAddress);
+          // Build a more readable but precise address
+          const addr = data.address;
+          const specificName = addr.amenity || addr.building || addr.house_number || "";
+          const neighborhood = addr.neighbourhood || addr.suburb || addr.village || "";
+          const road = addr.road || "";
+          const city = addr.city || addr.town || "";
+
+          let preciseAddress = "";
+          if (specificName) preciseAddress += `${specificName}, `;
+          if (neighborhood) preciseAddress += `${neighborhood}, `;
+          if (road) preciseAddress += `${road}, `;
+          if (city) preciseAddress += city;
+
+          // Fallback to display_name if our custom string is empty
+          setAddress(preciseAddress || data.display_name.split(',').slice(0, 3).join(',') || "Unknown Location");
         } catch (error) {
           console.error("Error fetching location address:", error);
           setAddress("New York, NY");

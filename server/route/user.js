@@ -44,6 +44,7 @@ router.post('/login', async (req, res) => {
       email: user.email,
       profilePictureUrl: user.profilePictureUrl,
       phoneNumber: user.phoneNumber,
+      addresses: user.addresses,
       createdAt: user.createdAt
     };
     
@@ -79,6 +80,7 @@ router.post('/users', async (req, res) => {
       email: newUser.email,
       profilePictureUrl: newUser.profilePictureUrl,
       phoneNumber: newUser.phoneNumber,
+      addresses: newUser.addresses || [],
       createdAt: newUser.createdAt
     };
     

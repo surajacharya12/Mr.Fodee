@@ -6,9 +6,11 @@ import Footer from "../../components/footer";
 import { ChevronLeft, MapPin, Plus, Home, Briefcase, Navigation, Edit2, Trash2, CheckCircle2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { userApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 type Address = {
-  _id: string;
+  _id: any; // Can be string or { $oid: string }
   type: string;
   detail: string;
   isDefault: boolean;
@@ -16,10 +18,11 @@ type Address = {
 
 export default function AddressesPage() {
   const router = useRouter();
+  const { user: authUser, updateUser } = useAuth();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(authUser?.id || null);
   
   // New address form state
   const [newAddress, setNewAddress] = useState({
@@ -30,21 +33,25 @@ export default function AddressesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        setUserId(user.id || user._id);
-        fetchAddresses(user.id || user._id);
-      } catch (e) {
-        console.error("Error parsing user data", e);
-        setLoading(false);
-      }
+    if (authUser) {
+      setUserId(authUser.id);
+      fetchAddresses(authUser.id);
     } else {
       setLoading(false);
-      // router.push("/login"); // Optional: redirect if not logged in
     }
-  }, []);
+  }, [authUser]);
+
+  const syncUserWithAddresses = (newAddresses: Address[]) => {
+    if (authUser) {
+      updateUser({
+        ...authUser,
+        addresses: newAddresses.map(addr => ({
+          ...addr,
+          _id: typeof addr._id === 'object' ? addr._id.$oid : addr._id
+        }))
+      });
+    }
+  };
 
   const fetchAddresses = async (id: string) => {
     try {
@@ -68,11 +75,15 @@ export default function AddressesPage() {
       setSubmitting(true);
       const response = await userApi.addAddress(userId, newAddress);
       // The backend returns the updated list of addresses
-      setAddresses(response.data);
+      const updatedAddresses = response.data;
+      setAddresses(updatedAddresses);
+      syncUserWithAddresses(updatedAddresses);
       setShowAddForm(false);
       setNewAddress({ type: "Home", detail: "", isDefault: false });
+      toast.success("Address added successfully");
     } catch (error) {
       console.error("Failed to add address:", error);
+      toast.error("Failed to add address");
     } finally {
       setSubmitting(false);
     }
@@ -83,9 +94,13 @@ export default function AddressesPage() {
     
     try {
       const response = await userApi.deleteAddress(userId, addressId);
-      setAddresses(response.data);
+      const updatedAddresses = response.data;
+      setAddresses(updatedAddresses);
+      syncUserWithAddresses(updatedAddresses);
+      toast.success("Address deleted");
     } catch (error) {
       console.error("Failed to delete address:", error);
+      toast.error("Failed to delete address");
     }
   };
 
@@ -94,9 +109,13 @@ export default function AddressesPage() {
     
     try {
       const response = await userApi.updateAddress(userId, addressId, { isDefault: true });
-      setAddresses(response.data);
+      const updatedAddresses = response.data;
+      setAddresses(updatedAddresses);
+      syncUserWithAddresses(updatedAddresses);
+      toast.success("Default address updated");
     } catch (error) {
       console.error("Failed to set default address:", error);
+      toast.error("Failed to update default address");
     }
   };
 

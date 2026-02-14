@@ -17,6 +17,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { userApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "@/context/LocationContext";
@@ -25,7 +26,7 @@ import toast from "react-hot-toast";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, updateUser } = useAuth();
   const { cart, clearCart } = useCart();
   const { address: currentAddress, coords } = useLocation();
   
@@ -40,6 +41,20 @@ export default function CheckoutPage() {
   const deliveryFee = subtotal > 0 ? 50 : 0;
   const total = subtotal + deliveryFee;
 
+  // Force fetch fresh user data to ensure addresses are loaded
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      userApi.getById(user.id)
+        .then(res => {
+          updateUser({
+            ...res.data,
+            id: res.data._id
+          });
+        })
+        .catch(err => console.error("Failed to refresh user data:", err));
+    }
+  }, [isLoggedIn, user?.id]);
+
   // Sync custom/selected address details
   const getDisplayAddress = () => {
     if (selectedAddress === "current") {
@@ -48,7 +63,10 @@ export default function CheckoutPage() {
       }
       return currentAddress;
     }
-    const addr = user?.addresses?.find((a: { type: string; detail: string }) => a.type.toLowerCase() === selectedAddress);
+    const addr = user?.addresses?.find((a: { type: string; detail: string; _id: any }) => {
+      const addrId = typeof a._id === 'object' ? a._id.$oid : a._id;
+      return addrId === selectedAddress || a.type.toLowerCase() === selectedAddress;
+    });
     return addr?.detail || "";
   };
 
@@ -135,16 +153,19 @@ export default function CheckoutPage() {
                 />
 
                 {/* User Saved Addresses (Home/Work) */}
-                {user?.addresses?.map((addr: any) => (
-                  <AddressOption 
-                    key={addr._id}
-                    id={addr.type.toLowerCase()} 
-                    label={addr.type} 
-                    detail={addr.detail} 
-                    active={selectedAddress === addr.type.toLowerCase()} 
-                    onSelect={() => setSelectedAddress(addr.type.toLowerCase())}
-                  />
-                ))}
+                {user?.addresses?.map((addr: any) => {
+                  const addrId = typeof addr._id === 'object' ? addr._id.$oid : addr._id;
+                  return (
+                    <AddressOption 
+                      key={addrId}
+                      id={addrId} 
+                      label={addr.type} 
+                      detail={addr.detail} 
+                      active={selectedAddress === addrId || selectedAddress === addr.type.toLowerCase()} 
+                      onSelect={() => setSelectedAddress(addrId)}
+                    />
+                  );
+                })}
 
                 {!user?.addresses?.length && (
                   <div className="p-6 bg-red-50/50 border-2 border-dashed border-red-100 rounded-4xl text-center">
@@ -220,7 +241,7 @@ export default function CheckoutPage() {
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 font-bold">Subtotal ({cart.items.length} items)</span>
+                  <span className="text-gray-400 font-bold">Subtotal ({cart?.items?.length || 0} items)</span>
                   <span className="text-gray-800 font-black">Rs. {subtotal}</span>
                 </div>
                 <div className="flex justify-between items-center">
