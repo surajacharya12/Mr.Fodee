@@ -12,6 +12,8 @@ const favoritesRoutes = require("./route/favorites");
 const categoryRoutes = require("./route/category");
 const reviewRoutes = require("./route/review");
 const notificationRoutes = require("./route/notification");
+const cartRoutes = require("./route/cart");
+const orderRoutes = require("./route/order");
 
 
 
@@ -73,6 +75,10 @@ app.use("/category", categoryRoutes);
 app.use("/review", reviewRoutes);
 app.use("/notification", notificationRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/cart", cartRoutes);
+app.use("/carts", cartRoutes);
+app.use("/order", orderRoutes);
+app.use("/orders", orderRoutes);
 
 const PORT = process.env.PORT || 3001;
 

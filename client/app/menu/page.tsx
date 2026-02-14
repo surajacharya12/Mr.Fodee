@@ -17,11 +17,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { foodApi, favoritesApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 function MenuContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
   const { user } = useAuth();
+  const { addToCart } = useCart();
   
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
@@ -147,7 +149,7 @@ function MenuContent() {
               key={item._id}
               className="group bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 flex flex-col"
             >
-              <div className="relative aspect-square mb-6 rounded-[2rem] overflow-hidden bg-[#F8F8F8]">
+              <div className="relative aspect-square mb-6 rounded-4xl overflow-hidden bg-[#F8F8F8]">
                 <img 
                   src={item.image} 
                   alt={item.name}
@@ -213,7 +215,10 @@ function MenuContent() {
                           {item.rating}
                         </div>
                       )}
-                      <button className="w-14 h-14 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-105 active:scale-95 transition-all">
+                      <button 
+                        onClick={() => addToCart(item._id, item.restaurant?._id || item.restaurant)}
+                        className="w-14 h-14 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-105 active:scale-95 transition-all"
+                      >
                         <Plus className="w-6 h-6 stroke-[3px]" />
                       </button>
                     </div>

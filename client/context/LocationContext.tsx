@@ -37,19 +37,15 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           setCoords({ latitude, longitude });
 
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
           );
           const data = await response.json();
 
-          const city =
-            data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            data.address.state ||
-            "Unknown Location";
-          const country = data.address.country_code?.toUpperCase() || "";
-
-          setAddress(`${city}${country ? `, ${country}` : ""}`);
+          // Use display_name for a more precise address, or fallback to components
+          const preciseAddress = data.display_name || 
+            (data.address.suburb || data.address.neighbourhood || data.address.road || data.address.city || "Unknown Location");
+          
+          setAddress(preciseAddress);
         } catch (error) {
           console.error("Error fetching location address:", error);
           setAddress("New York, NY");

@@ -83,4 +83,10 @@ export const categoryApi = {
   delete: (id: string) => api.delete(`/category/${id}`),
 };
 
+export const orderApi = {
+  getAll: () => api.get('/order/all'),
+  updateStatus: (id: string, data: { status?: string; paymentStatus?: string }) => 
+    api.patch(`/order/status/${id}`, data),
+};
+
 export default api;

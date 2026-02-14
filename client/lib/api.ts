@@ -131,4 +131,23 @@ export const notificationApi = {
   deleteAll: (userId?: string) => api.delete("/notification", { params: { userId } }),
 };
 
+export const cartApi = {
+  getByUser: (userId: string) => api.get(`/cart/${userId}`),
+  addItem: (data: { userId: string; foodId: string; quantity: number; restaurantId: string }) => api.post("/cart/add", data),
+  updateQuantity: (data: { userId: string; foodId: string; quantity: number }) => api.put("/cart/update", data),
+  removeItem: (userId: string, foodId: string) => api.delete(`/cart/remove/${userId}/${foodId}`),
+  clear: (userId: string) => api.delete(`/cart/clear/${userId}`),
+};
+
+export const orderApi = {
+  placeCOD: (data: { 
+    userId: string; 
+    items: any[]; 
+    totalAmount: number; 
+    deliveryAddress: string; 
+    instructions?: string 
+  }) => api.post("/order/cod", data),
+  getUserOrders: (userId: string) => api.get(`/order/user/${userId}`),
+};
+
 export default api;

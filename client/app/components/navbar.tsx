@@ -19,11 +19,15 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation } from "@/context/LocationContext";
+import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isLoggedIn, logout } = useAuth();
   const { address: location, isLoading: isLoadingLocation } = useLocation();
+  const { cart } = useCart();
+
+  const cartItemsCount = cart?.items.length || 0;
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -152,9 +156,11 @@ export default function Navbar() {
                 className="relative p-2.5 sm:p-2 hover:bg-orange-50 rounded-full cursor-pointer group transition-colors"
               >
                 <ShoppingCart className="w-5 h-5 text-gray-600 group-hover:text-[primary]" />
-                <span className="absolute top-1.5 right-1.5 bg-[primary] text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-white font-bold">
-                  2
-                </span>
+                {cartItemsCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 bg-[primary] text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                    {cartItemsCount}
+                  </span>
+                )}
               </Link>
 
               {/* Desktop Profile / Login */}
@@ -299,7 +305,7 @@ export default function Navbar() {
                 <ProfileItem
                   icon={<ShoppingCart size={20} />}
                   label="Cart"
-                  badge="3"
+                  badge={cartItemsCount > 0 ? cartItemsCount.toString() : undefined}
                 />
               </Link>
               <Link

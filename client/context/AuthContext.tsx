@@ -9,6 +9,12 @@ interface User {
   profilePictureUrl?: string;
   phoneNumber?: string;
   createdAt?: string;
+  addresses?: Array<{
+    _id: string;
+    type: string;
+    detail: string;
+    isDefault: boolean;
+  }>;
 }
 
 interface AuthContextType {
