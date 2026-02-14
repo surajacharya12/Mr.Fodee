@@ -66,6 +66,15 @@ export const foodApi = {
   delete: (id: string) => api.delete(`/food/${id}`),
 };
 
+export const notificationApi = {
+  getAll: () => api.get('/notification/all'),
+  getById: (id: string) => api.get(`/notification/${id}`),
+  create: (data: any) => api.post('/notification', data),
+  update: (id: string, data: any) => api.put(`/notification/${id}`, data),
+  delete: (id: string) => api.delete(`/notification/${id}`),
+  deleteAll: () => api.delete('/notification'),
+};
+
 export const categoryApi = {
   getAll: () => api.get('/category'),
   getById: (id: string) => api.get(`/category/${id}`),

@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   Pizza,
-  Grid2X2
+  Grid2X2,
+  Bell
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -27,6 +28,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     { icon: Tag, label: "Offers", href: "/offers" },
     { icon: Grid2X2, label: "Categories", href: "/categories" },
     { icon: Pizza, label: "Food Items", href: "/food" },
+    { icon: Bell, label: "Notifications", href: "/notifications" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 

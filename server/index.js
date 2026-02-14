@@ -11,6 +11,7 @@ const foodRoutes = require("./route/food");
 const favoritesRoutes = require("./route/favorites");
 const categoryRoutes = require("./route/category");
 const reviewRoutes = require("./route/review");
+const notificationRoutes = require("./route/notification");
 
 
 
@@ -70,6 +71,8 @@ app.use("/food", foodRoutes);
 app.use("/favorites", favoritesRoutes);
 app.use("/category", categoryRoutes);
 app.use("/review", reviewRoutes);
+app.use("/notification", notificationRoutes);
+app.use("/notifications", notificationRoutes);
 
 const PORT = process.env.PORT || 3001;
 

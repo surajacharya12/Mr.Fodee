@@ -1,66 +1,107 @@
 "use client";
 
-import React from "react";
-import Navbar from "../components/navbar";
-import Footer from "../components/footer";
-import { 
-  Bell, 
-  ChevronLeft, 
-  Trash2, 
-  Circle, 
-  Clock, 
-  ShoppingBag, 
-  Tag, 
+import React, { useEffect, useState } from "react";
+import Navbar from "@/app/components/navbar";
+import Footer from "@/app/components/footer";
+import {
+  Bell,
+  ChevronLeft,
+  Trash2,
+  Clock,
+  ShoppingBag,
+  Tag,
   Info,
-  CheckCheck
+  CheckCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { notificationApi } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+
+interface Notification {
+  _id: string;
+  notificationTitle: string;
+  notificationDescription: string;
+  notificationImage?: string;
+  type: "order" | "promo" | "info";
+  isRead: boolean;
+  createdAt: string;
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const notifications = [
-    {
-      id: 1,
-      title: "Order Delivered!",
-      message: "The Italian Corner has delivered your order. Enjoy your meal!",
-      type: "order",
-      time: "2 mins ago",
-      isRead: false,
-      icon: ShoppingBag,
-      color: "text-emerald-500 bg-emerald-50"
-    },
-    {
-      id: 2,
-      title: "Flash Sale Alert ⚡",
-      message: "Get 50% OFF on all Sushi items for the next 2 hours. Don't miss out!",
-      type: "promo",
-      time: "1 hour ago",
-      isRead: false,
-      icon: Tag,
-      color: "text-[#EE4444] bg-red-50"
-    },
-    {
-      id: 3,
-      title: "Wallet Topped Up",
-      message: "Success! $100.00 has been added to your Fodee Wallet.",
-      type: "info",
-      time: "Yesterday",
-      isRead: true,
-      icon: Info,
-      color: "text-blue-500 bg-blue-50"
-    },
-    {
-      id: 4,
-      title: "Rider is nearby",
-      message: "Your rider is just 500m away from your location.",
-      type: "order",
-      time: "Yesterday",
-      isRead: true,
-      icon: ShoppingBag,
-      color: "text-emerald-500 bg-emerald-50"
+  // 🔥 Fetch Notifications
+  const fetchNotifications = async () => {
+    try {
+      const res = await notificationApi.getAll(user?.id);
+      setNotifications(res.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [user?.id]);
+
+  // 🔥 Mark Single as Read
+  const markAsRead = async (id: string) => {
+    try {
+      if (!user?.id) return;
+      await notificationApi.update(id, { isRead: true, userId: user.id });
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+      );
+    } catch (error) {
+      console.error("Mark as read failed", error);
+    }
+  };
+
+  // 🔥 Mark All as Read
+  const markAllRead = async () => {
+    try {
+      if (!user?.id) return;
+      await Promise.all(
+        notifications.map((n) =>
+          notificationApi.update(n._id, { isRead: true, userId: user.id }),
+        ),
+      );
+      fetchNotifications();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 🔥 Delete Single
+  const handleDelete = async (id: string) => {
+    try {
+      await notificationApi.delete(id, user?.id);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 🔥 Delete All
+  const deleteAll = async () => {
+    try {
+      await notificationApi.deleteAll(user?.id);
+      setNotifications([]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getIcon = (type: string) => {
+    if (type === "order") return ShoppingBag;
+    if (type === "promo") return Tag;
+    return Info;
+  };
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -68,79 +109,107 @@ export default function NotificationsPage() {
 
       <main className="pt-24 pb-20">
         <div className="max-w-3xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          {/* Header */}
+          <div className="flex justify-between mb-10">
             <div>
-              <button 
+              <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-400 hover:text-[#EE4444] font-bold mb-4 transition-colors group"
+                className="flex items-center gap-2 text-gray-400 hover:text-[#EE4444] font-bold mb-4"
               >
-                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                Back to Profile
+                <ChevronLeft className="w-5 h-5" />
+                Back
               </button>
-              <h1 className="text-4xl font-black text-[#2D2D2D]">Notifications</h1>
+
+              <h1 className="text-4xl font-black text-[#2D2D2D]">
+                Notifications
+              </h1>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <button className="h-12 px-6 rounded-xl bg-white border border-gray-100 text-gray-500 font-bold text-xs hover:text-[#EE4444] transition-all flex items-center gap-2 shadow-sm">
+
+            <div className="flex gap-3">
+              <button
+                onClick={markAllRead}
+                className="h-12 px-5 rounded-xl bg-white border text-xs font-bold flex items-center gap-2"
+              >
                 <CheckCheck className="w-4 h-4" />
                 Mark all read
               </button>
-              <button className="h-12 w-12 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-500 transition-all flex items-center justify-center shadow-sm">
+
+              <button
+                onClick={deleteAll}
+                className="h-12 w-12 rounded-xl bg-white border text-gray-400 hover:text-red-500 flex items-center justify-center"
+              >
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-            {notifications.length > 0 ? (
-              <div className="divide-y divide-gray-50">
-                {notifications.map((notif) => (
-                  <div key={notif.id} className={`p-6 md:p-8 flex items-start gap-6 hover:bg-gray-50/50 transition-all cursor-pointer relative group ${!notif.isRead ? 'bg-red-50/20' : ''}`}>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${notif.color} transition-transform group-hover:scale-110 shadow-sm`}>
-                      <notif.icon className="w-6 h-6" />
+          {/* Notifications Box */}
+          <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
+            {loading ? (
+              <div className="p-10 text-center text-gray-400">Loading...</div>
+            ) : notifications.length > 0 ? (
+              notifications.map((notif) => {
+                const Icon = getIcon(notif.type);
+
+                return (
+                  <div
+                    key={notif._id}
+                    onClick={() => markAsRead(notif._id)}
+                    className={`p-6 flex items-start gap-6 border-b hover:bg-gray-50 cursor-pointer ${
+                      !notif.isRead ? "bg-red-50/20" : ""
+                    }`}
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                      {notif.notificationImage ? (
+                        <img src={notif.notificationImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Icon className="w-6 h-6" />
+                      )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className={`text-lg transition-colors group-hover:text-[#EE4444] ${notif.isRead ? 'font-bold text-gray-800' : 'font-black text-[#2D2D2D]'}`}>
-                          {notif.title}
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h3 className="text-lg font-bold">
+                          {notif.notificationTitle}
                         </h3>
+
                         {!notif.isRead && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#EE4444] shadow-lg shadow-red-500/50" />
+                          <div className="w-2 h-2 bg-red-500 rounded-full" />
                         )}
                       </div>
-                      <p className={`text-sm leading-relaxed mb-4 ${notif.isRead ? 'text-gray-400 font-medium' : 'text-gray-600 font-bold'}`}>
-                        {notif.message}
+
+                      <p className="text-sm text-gray-600 mt-1 mb-2">
+                        {notif.notificationDescription}
                       </p>
-                      <div className="flex items-center gap-2 text-gray-300 font-bold text-[10px] uppercase tracking-widest">
-                        <Clock className="w-3.5 h-3.5" />
-                        {notif.time}
+
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <Clock className="w-3 h-3" />
+                        {new Date(notif.createdAt).toLocaleString()}
                       </div>
                     </div>
 
-                    {/* Desktop Hover Actions */}
-                    <div className="absolute right-8 bottom-8 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                       <button className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-red-500">
-                         <Trash2 className="w-4 h-4" />
-                       </button>
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(notif._id);
+                      }}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                ))}
-              </div>
+                );
+              })
             ) : (
-              <div className="py-24 flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
-                  <Bell className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-bold text-[#2D2D2D] mb-2">No notifications yet</h3>
-                <p className="text-gray-400 font-medium max-w-xs">We'll let you know when something important happens.</p>
+              <div className="py-20 flex flex-col items-center text-center">
+                <Bell className="w-10 h-10 text-gray-300 mb-4" />
+                <h3 className="text-xl font-bold">No notifications yet</h3>
+                <p className="text-gray-400">
+                  We'll notify you when something happens.
+                </p>
               </div>
             )}
           </div>
-
-          <p className="text-center text-[10px] font-black text-gray-300 uppercase tracking-widest mt-12 mb-20 px-8">
-            Manage your notification preferences in <span className="text-[#EE4444] cursor-pointer hover:underline" onClick={() => router.push('/settings')}>Settings</span>
-          </p>
         </div>
       </main>
 

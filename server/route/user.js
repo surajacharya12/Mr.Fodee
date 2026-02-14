@@ -104,17 +104,45 @@ router.get('/users/:id', async (req, res) => {
 // Update a user by ID
 router.put('/users/:id', async (req, res) => {
   try {
+    console.log("\n========================================");
+    console.log("📥 USER UPDATE REQUEST");
+    console.log("========================================");
+    console.log("User ID:", req.params.id);
+    console.log("Request Body:", JSON.stringify(req.body, null, 2));
+    
     const { username, email, passwordHash, profilePictureUrl, phoneNumber } = req.body;
+    
+    // Create an update object with only defined fields
+    const updateData = {};
+    if (username !== undefined) updateData.username = username;
+    if (email !== undefined) updateData.email = email;
+    if (passwordHash !== undefined) updateData.passwordHash = passwordHash;
+    if (profilePictureUrl !== undefined) updateData.profilePictureUrl = profilePictureUrl;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+
+    console.log("Update Data Object:", JSON.stringify(updateData, null, 2));
+    console.log("Calling findByIdAndUpdate...");
+
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
-      { username, email, passwordHash, profilePictureUrl, phoneNumber },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
+    
     if (!updatedUser) {
+      console.log("❌ User not found!");
       return res.status(404).json({ error: 'User not found' });
     }
+    
+    console.log("✅ User updated successfully!");
+    console.log("Updated profilePictureUrl:", updatedUser.profilePictureUrl);
+    console.log("========================================\n");
+    
     res.status(200).json(updatedUser);
   } catch (error) {
+    console.error("❌ Update User Error:", error);
+    console.error("Error message:", error.message);
+    console.error("========================================\n");
     res.status(400).json({ error: error.message });
   }
 });

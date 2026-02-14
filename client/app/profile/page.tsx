@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { userApi, uploadApi } from "../../lib/api";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
 import { 
@@ -27,7 +28,7 @@ import toast from "react-hot-toast";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [promotions, setPromotions] = useState(true);
   const [userData, setUserData] = useState({
@@ -70,19 +71,116 @@ export default function ProfilePage() {
   };
 
   // Handle image upload
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+    
+    console.log("=== FILE UPLOAD STARTED ===");
+    console.log("File name:", file.name);
+    console.log("File size:", file.size, "bytes");
+    console.log("File type:", file.type);
+    
+    setImageFile(file);
+    
+    // Show preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      console.log("Preview loaded");
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    try {
+      const loadingToast = toast.loading("Uploading profile picture...");
       
-      // Here you would typically upload to your server
-      // For now, we'll just show the preview
-      // TODO: Implement actual image upload to server
+      console.log("Calling uploadApi.uploadFile...");
+      
+      // Upload to server
+      const uploadRes = await uploadApi.uploadFile(file);
+      
+      console.log("=== UPLOAD RESPONSE ===");
+      console.log("Status:", uploadRes.status);
+      console.log("Full response data:", JSON.stringify(uploadRes.data, null, 2));
+      
+      const imageUrl = uploadRes.data.url;
+      
+      console.log("Extracted imageUrl:", imageUrl);
+      console.log("Type of imageUrl:", typeof imageUrl);
+      console.log("Length of imageUrl:", imageUrl?.length);
+      
+      // CRITICAL: Validate it's a proper Cloudinary URL
+      if (!imageUrl) {
+          console.error("❌ Upload failed: No URL in response", uploadRes.data);
+          throw new Error("Failed to upload image: Server returned no URL");
+      }
+      
+      if (typeof imageUrl !== 'string') {
+          console.error("❌ Upload failed: URL is not a string", typeof imageUrl);
+          throw new Error("Failed to upload image: Invalid URL type");
+      }
+      
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+          console.error("❌ Upload failed: URL does not start with http:// or https://");
+          console.error("Received:", imageUrl);
+          throw new Error(`Failed to upload image: Invalid URL format (got: ${imageUrl.substring(0, 50)}...)`);
+      }
+      
+      if (!imageUrl.includes('cloudinary.com')) {
+          console.error("❌ Upload failed: URL is not from Cloudinary");
+          console.error("Received:", imageUrl);
+          throw new Error("Failed to upload image: Not a Cloudinary URL");
+      }
+      
+      console.log("✅ URL validation passed!");
+      console.log("Valid Cloudinary URL:", imageUrl);
+      
+      console.log("=== UPDATING USER PROFILE ===");
+      console.log("User ID:", userData.id);
+      console.log("New profilePictureUrl:", imageUrl);
+      
+      // Update user profile
+      if (userData.id) {
+         const updateRes = await userApi.update(userData.id, { 
+           profilePictureUrl: imageUrl 
+         });
+         
+         console.log("=== UPDATE RESPONSE ===");
+         console.log("Response status:", updateRes.status);
+         console.log("Updated user from server:", updateRes.data);
+         console.log("Server returned profilePictureUrl:", updateRes.data.profilePictureUrl);
+         
+         // Verify the server actually saved the URL
+         if (updateRes.data.profilePictureUrl !== imageUrl) {
+            console.error("⚠️ WARNING: Server returned different profilePictureUrl!");
+            console.error("Expected:", imageUrl);
+            console.error("Got:", updateRes.data.profilePictureUrl);
+            throw new Error("Server did not save the profile picture correctly");
+         }
+         
+         console.log("✅ Server confirmed profilePictureUrl saved correctly");
+         
+         // Update local state and context ONLY after server confirms
+         const updatedUser = { ...userData, profilePictureUrl: imageUrl };
+         setUserData(updatedUser);
+         updateUser(updatedUser);
+         
+         toast.dismiss(loadingToast);
+         toast.success("Profile picture updated successfully!");
+         console.log("✅ UPLOAD COMPLETE");
+      }
+    } catch (err: any) {
+      console.error("=== UPLOAD ERROR ===");
+      console.error("Error:", err);
+      console.error("Error message:", err.message);
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+      }
+      toast.dismiss();
+      toast.error(err.response?.data?.error || err.message || "Failed to update profile picture");
     }
   };
 

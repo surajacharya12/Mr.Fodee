@@ -238,13 +238,24 @@ export default function RestaurantDetailPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl md:text-4xl font-black text-[#2D2D2D]">{restaurant.name}</h1>
-                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500 text-white text-sm font-black">
-                    <Star className="w-4 h-4 fill-current" />
-                    {restaurant.rating}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0.5" title={`${restaurant.rating} stars`}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star 
+                          key={star} 
+                          className={`w-5 h-5 ${
+                            star <= Math.round(restaurant.rating) 
+                              ? "fill-orange-400 text-orange-400" 
+                              : "fill-gray-200 text-gray-200"
+                          }`} 
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-black text-gray-500">({restaurant.rating})</span>
                   </div>
                   <button 
                     onClick={() => setShowReviewModal(true)}
-                    className="flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 text-[#2D2D2D] text-xs font-black hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 text-[#2D2D2D] text-xs font-black hover:bg-gray-200 transition-colors ml-2"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     Rate Now
@@ -390,7 +401,7 @@ export default function RestaurantDetailPage() {
 
       {/* Review Modal */}
       {showReviewModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowReviewModal(false)} />
           <div className="relative bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
             <button 
@@ -461,20 +472,32 @@ export default function RestaurantDetailPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.map((rev) => (
-              <div key={rev._id} className="bg-white rounded-[2rem] p-6 border border-gray-50 shadow-sm hover:shadow-md transition-shadow">
+              <div key={rev._id} className="bg-white rounded-4xl p-6 border border-gray-50 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#EE4444] font-bold uppercase">
-                      {rev.user?.username?.[0] || 'U'}
+                    <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-[#EE4444] font-bold uppercase shrink-0 overflow-hidden">
+                      <img 
+                        src={rev.user?.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(rev.user?.username || 'User')}&background=random`} 
+                        alt={rev.user?.username || 'User'} 
+                        className="w-full h-full object-cover" 
+                      />
                     </div>
                     <div>
-                      <p className="font-bold text-[#2D2D2D]">{rev.user?.username || 'User'}</p>
+                      <p className="font-bold text-[#2D2D2D] truncate max-w-[120px]">{rev.user?.username || 'User'}</p>
                       <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest">{new Date(rev.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 text-orange-500 text-xs font-black">
-                     <Star className="w-3 h-3 fill-current" />
-                     {rev.rating}
+                  <div className="flex items-center gap-0.5" title={`${rev.rating} stars`}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star 
+                        key={star} 
+                        className={`w-3.5 h-3.5 ${
+                          star <= Math.round(rev.rating) 
+                            ? "fill-orange-400 text-orange-400" 
+                            : "fill-gray-100 text-gray-100"
+                        }`} 
+                      />
+                    ))}
                   </div>
                 </div>
                 <p className="text-gray-500 text-sm leading-relaxed italic">"{rev.comment || 'No comment provided.'}"</p>
