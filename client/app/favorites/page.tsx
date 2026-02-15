@@ -17,11 +17,13 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { favoritesApi } from "@/lib/api";
 
 export default function FavoritesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,7 +154,10 @@ export default function FavoritesPage() {
 
                       <div className="flex items-center justify-between mb-8">
                          <span className="text-2xl font-black text-[#2D2D2D]">Rs. {item.price}</span>
-                         <button className="w-12 h-12 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-110 active:scale-95 transition-all">
+                         <button 
+                           onClick={() => addToCart(item._id, item.restaurant?._id || item.restaurant)}
+                           className="w-12 h-12 rounded-2xl bg-[#EE4444] text-white flex items-center justify-center shadow-lg shadow-[#EE4444]/25 hover:scale-110 active:scale-95 transition-all"
+                         >
                            <Plus className="w-6 h-6 stroke-[3px]" />
                          </button>
                       </div>

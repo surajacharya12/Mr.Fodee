@@ -147,7 +147,26 @@ export const orderApi = {
     deliveryAddress: string; 
     instructions?: string 
   }) => api.post("/order/cod", data),
+  placeOrder: (data: {
+    userId: string;
+    items: any[];
+    totalAmount: number;
+    deliveryAddress: string;
+    paymentMethod: string;
+    instructions?: string;
+  }) => api.post("/order/create", data),
   getUserOrders: (userId: string) => api.get(`/order/user/${userId}`),
+};
+
+export const paymentApi = {
+  initiate: (data: { orderId: string; method: string }) =>
+    api.post("/payment/initiate", data),
+  verify: (params: {
+    method: string;
+    orderId: string;
+    data?: string;
+    pidx?: string;
+  }) => api.get("/payment/verify", { params }),
 };
 
 export default api;

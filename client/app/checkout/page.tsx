@@ -17,11 +17,10 @@ import {
   Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { userApi } from "@/lib/api";
+import { orderApi, userApi, paymentApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "@/context/LocationContext";
-import { orderApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
 export default function CheckoutPage() {
@@ -89,28 +88,58 @@ export default function CheckoutPage() {
 
     setLoading(true);
     try {
+      const orderData = {
+        userId: user.id,
+        items: cart.items.map(item => ({
+          food: item.food._id,
+          quantity: item.quantity,
+          price: item.food.price
+        })),
+        totalAmount: total,
+        deliveryAddress: finalAddress,
+        paymentMethod: payment === 'cod' ? 'COD' : payment === 'esewa' ? 'eSewa' : 'Khalti',
+        instructions: instructions
+      };
+
       if (payment === "cod") {
-        await orderApi.placeCOD({
-          userId: user.id,
-          items: cart.items.map(item => ({
-            food: item.food._id,
-            quantity: item.quantity,
-            price: item.food.price
-          })),
-          totalAmount: total,
-          deliveryAddress: finalAddress,
-          instructions: instructions
-        });
-        
+        await orderApi.placeCOD(orderData);
         await clearCart();
         setSuccess(true);
       } else {
-        toast.error("Only Cash on Delivery is currently supported");
+        // Handle online payment (eSewa or Khalti)
+        const orderRes = await orderApi.placeOrder(orderData);
+        const orderId = orderRes.data.order._id;
+
+        const paymentRes = await paymentApi.initiate({
+          orderId,
+          method: payment
+        });
+
+        if (payment === "esewa") {
+          // Create and submit eSewa form
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = paymentRes.data.url;
+
+          Object.entries(paymentRes.data.config).forEach(([key, value]) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = String(value);
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+        } else if (payment === "khalti") {
+          window.location.href = paymentRes.data.url;
+        }
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to place order");
     } finally {
-      setLoading(false);
+      if (payment === "cod") setLoading(false);
+      // For others, redirection will occur
     }
   };
 
@@ -209,6 +238,22 @@ export default function CheckoutPage() {
                   detail="Pay when you receive your food" 
                   active={payment === "cod"} 
                   onSelect={() => setPayment("cod")}
+                />
+                <PaymentOption 
+                  id="esewa" 
+                  label="eSewa" 
+                  icon={<div className="font-black text-[10px] text-emerald-600">eSewa</div>} 
+                  detail="Pay securely with eSewa" 
+                  active={payment === "esewa"} 
+                  onSelect={() => setPayment("esewa")}
+                />
+                <PaymentOption 
+                  id="khalti" 
+                  label="Khalti" 
+                  icon={<div className="font-black text-[10px] text-purple-600">Khalti</div>} 
+                  detail="Pay securely with Khalti" 
+                  active={payment === "khalti"} 
+                  onSelect={() => setPayment("khalti")}
                 />
                 <PaymentOption 
                   id="card" 

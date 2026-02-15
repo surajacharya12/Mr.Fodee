@@ -32,6 +32,38 @@ router.post('/cod', async (req, res) => {
   }
 });
 
+// Create a new order (General)
+router.post('/create', async (req, res) => {
+  try {
+    const { userId, items, totalAmount, deliveryAddress, paymentMethod, instructions } = req.body;
+
+    const order = new Order({
+      user: userId,
+      items,
+      totalAmount,
+      deliveryAddress,
+      paymentMethod,
+      status: 'Pending',
+      paymentStatus: 'Pending',
+      instructions
+    });
+
+    await order.save();
+
+    // Note: for online payments, we clear cart after successful verification
+    if (paymentMethod === 'COD') {
+      await Cart.findOneAndUpdate({ user: userId }, { items: [], totalPrice: 0 });
+    }
+
+    res.status(201).json({ 
+      message: 'Order initiated successfully', 
+      order 
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Get user orders
 router.get('/user/:userId', async (req, res) => {
   try {

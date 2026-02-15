@@ -33,7 +33,7 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['COD', 'Card', 'Wallet'],
+    enum: ['COD', 'Card', 'eSewa', 'Khalti'],
     default: 'COD'
   },
   status: {
@@ -43,8 +43,17 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Paid'],
+    enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
     default: 'Pending'
+  },
+  transactionId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  paymentDetails: {
+    type: Object,
+    default: {}
   },
   instructions: String
 }, { timestamps: true });

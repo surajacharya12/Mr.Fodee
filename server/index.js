@@ -14,6 +14,7 @@ const reviewRoutes = require("./route/review");
 const notificationRoutes = require("./route/notification");
 const cartRoutes = require("./route/cart");
 const orderRoutes = require("./route/order");
+const paymentRoutes = require("./route/payment");
 
 
 
@@ -79,6 +80,7 @@ app.use("/cart", cartRoutes);
 app.use("/carts", cartRoutes);
 app.use("/order", orderRoutes);
 app.use("/orders", orderRoutes);
+app.use("/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 3001;
 

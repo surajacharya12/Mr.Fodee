@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "@/context/LocationContext";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { calculateDistance, extractCoordsFromLink, formatDistance, getNavigationLink } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
 import { restaurantApi, foodApi, favoritesApi, reviewApi } from "../../../lib/api";
@@ -26,6 +27,7 @@ export default function RestaurantDetailPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const { coords: userCoords, isLoading: isLocLoading } = useLocation();
 
   const [activeTab, setActiveTab] = useState("Recommended");
@@ -387,7 +389,10 @@ export default function RestaurantDetailPage() {
                   </div>
 
                   <div className="flex flex-col items-center gap-2 shrink-0">
-                    <button className="h-11 px-7 rounded-xl bg-white text-[#EE4444] font-black border-2 border-gray-100 hover:border-[#EE4444] hover:bg-[#EE4444] hover:text-white transition-all shadow-sm text-sm">
+                    <button 
+                      onClick={() => addToCart(item._id, id)}
+                      className="h-11 px-7 rounded-xl bg-white text-[#EE4444] font-black border-2 border-gray-100 hover:border-[#EE4444] hover:bg-[#EE4444] hover:text-white transition-all shadow-sm text-sm"
+                    >
                       ADD
                     </button>
                     <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">Customizable</p>
