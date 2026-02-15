@@ -2,14 +2,17 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../module/order');
 const Cart = require('../module/cart');
+const Restaurant = require('../module/resturent');
+const { findNearestRider } = require('../services/riderService');
 
 // Create a new order (COD)
 router.post('/cod', async (req, res) => {
   try {
-    const { userId, items, totalAmount, deliveryAddress, instructions } = req.body;
+    const { userId, restaurantId, items, totalAmount, deliveryAddress, instructions } = req.body;
 
     const order = new Order({
       user: userId,
+      restaurant: restaurantId,
       items,
       totalAmount,
       deliveryAddress,
@@ -35,10 +38,11 @@ router.post('/cod', async (req, res) => {
 // Create a new order (General)
 router.post('/create', async (req, res) => {
   try {
-    const { userId, items, totalAmount, deliveryAddress, paymentMethod, instructions } = req.body;
+    const { userId, restaurantId, items, totalAmount, deliveryAddress, paymentMethod, instructions } = req.body;
 
     const order = new Order({
       user: userId,
+      restaurant: restaurantId,
       items,
       totalAmount,
       deliveryAddress,
@@ -93,16 +97,35 @@ router.get('/all', async (req, res) => {
 router.patch('/status/:id', async (req, res) => {
   try {
     const { status, paymentStatus } = req.body;
-    const updateData = {};
-    if (status) updateData.status = status;
-    if (paymentStatus) updateData.paymentStatus = paymentStatus;
-
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    
+    let order = await Order.findById(req.params.id).populate('restaurant');
     if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
+
+    // Nearest Rider Assignment Logic
+    if (status === 'Confirmed' && !order.rider) {
+      const restaurant = order.restaurant;
+      if (restaurant && restaurant.location && restaurant.location.coordinates) {
+        const nearestRider = await findNearestRider(restaurant.location.coordinates);
+        if (nearestRider) {
+          order.rider = nearestRider._id;
+          order.status = 'Assigned';
+          
+          // Emit socket event to rider
+          if (req.io) {
+            req.io.to(nearestRider.user.toString()).emit('newOrder', {
+              orderId: order._id,
+              restaurantName: restaurant.name,
+              totalAmount: order.totalAmount
+            });
+          }
+        }
+      }
+    }
+
+    await order.save();
     res.json(order);
   } catch (err) {
     res.status(400).json({ error: err.message });

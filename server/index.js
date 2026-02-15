@@ -15,10 +15,45 @@ const notificationRoutes = require("./route/notification");
 const cartRoutes = require("./route/cart");
 const orderRoutes = require("./route/order");
 const paymentRoutes = require("./route/payment");
-
+const riderRoutes = require("./route/rider");
+const http = require("http");
+const { Server } = require("socket.io");
 
 
 const app = express(); 
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Adjust for production
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.io logic
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined room`);
+  });
+
+  socket.on("updateLocation", async (data) => {
+    const { riderId, latitude, longitude } = data;
+    // We could emit this to customers tracking the rider
+    io.emit(`locationUpdate_${riderId}`, { latitude, longitude });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
+
+// Attach io to req for use in routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // CORS configuration for production
 const corsOptions = {
@@ -81,11 +116,12 @@ app.use("/carts", cartRoutes);
 app.use("/order", orderRoutes);
 app.use("/orders", orderRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/rider", riderRoutes);
 
 const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server is running with Socket.io on port ${PORT}`);
 });
 
 module.exports = app;

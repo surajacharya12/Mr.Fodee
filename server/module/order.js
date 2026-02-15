@@ -6,6 +6,10 @@ const orderSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  restaurant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant'
+  },
   items: [
     {
       food: {
@@ -36,9 +40,13 @@ const orderSchema = new mongoose.Schema({
     enum: ['COD', 'Card', 'eSewa', 'Khalti'],
     default: 'COD'
   },
+  rider: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Rider'
+  },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'],
+    enum: ['Pending', 'Confirmed', 'Preparing', 'Assigned', 'Accepted', 'Picked Up', 'Out for Delivery', 'Delivered', 'Cancelled'],
     default: 'Pending'
   },
   paymentStatus: {
